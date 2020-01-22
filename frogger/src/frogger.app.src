@@ -1,0 +1,16 @@
+{application, frogger,
+ [{description, "A Frogger OTP application"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {frogger_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    esdl2
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+ ]}.
