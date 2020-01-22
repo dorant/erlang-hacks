@@ -100,7 +100,7 @@ terminate() ->
     init:stop(),
     exit(normal).
 
-move_player(State=#{player:=#{jump:=0}}, Scancode) ->
+move_player(State=#{player:=#{jump:=0, dying:=0}}, Scancode) ->
     Player=maps:get(player, State),
     case Scancode of
         ?KEYCODE_RIGHT ->
@@ -118,7 +118,7 @@ move_player(State=#{player:=#{jump:=0}}, Scancode) ->
         _ -> io:format("Unhandled scancode: ~B~n", [Scancode]),
               State
     end;
-move_player(State, _Scancode) ->  %% No movement change during jump
+move_player(State, _Scancode) ->  %% No movement change during jump or dying
     State.
 
 get_player_face(Jump) ->
@@ -133,9 +133,18 @@ get_player_face(Jump) ->
         8 -> 0
     end.
 
-update_player(State=#{player:=#{jump:=0}}) -> %% Not moving
+get_player_deadface(Id) ->
+    case Id of
+        0 -> 1;
+        1 -> 1;
+        2 -> 2;
+        3 -> 3;
+        4 -> 0
+    end.
+
+update_player(State=#{player:=#{jump:=0, dying:=0}}) -> %% Not moving
     State;
-update_player(State=#{player:=#{jump:=9}}) -> %% Finished jump
+update_player(State=#{player:=#{jump:=9, dying:=0}}) -> %% Finished jump
     Player=maps:get(player, State),
     Score=maps:get(score, State) + 10,
     State#{score:=Score, player := Player#{sprite_h=>2, jump=>0}};
@@ -152,9 +161,17 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an 
     State#{player := Player#{x => X,
                              y => Y,
                              sprite_h => NewFace,
+                             sprite_v => 0,
                              jump => NewJump}};
-update_player(State) -> %% Dying, dont move
-    State.
+update_player(State=#{player:=Player=#{dying:=Dying}}) -> %% Dying, dont move
+    Scale=6,
+    NewFace=get_player_deadface(Dying div Scale),
+    if Dying == 4*Scale -> NewDying=4*Scale;
+       true       -> NewDying=Dying + 1
+    end,
+    State#{player := Player#{sprite_h=>NewFace,
+                             sprite_v=>3,
+                             dying=>NewDying}}.
 
 
 update_cars(State) ->
