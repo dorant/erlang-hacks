@@ -57,12 +57,14 @@ init() ->
            textures=>#{background=>TextureBack, sprites=>TextureSprites},
            score=>0,
            player=>#{x=>16*7, y=>16*14, w=>16, h=>16, dir=>up, face=>2, jump=>0, dying=>0},
-           car=>#{x=>?WIDTH+16, y=>16*13, w=>16, h=>16}}).
+           cars=>[#{x=>?WIDTH+16, y=>16*13, w=>16, h=>16},
+                  #{x=>?WIDTH+16, y=>16*11, w=>16, h=>16}]
+          }).
 
 loop(State) ->
     State2 = events_loop(State),
     State3 = update_player(State2),
-    State4 = update_car(State3),
+    State4 = update_cars(State3),
     State5 = check_collision(State4),
     render(State5),
     timer:sleep(1000 div 60), %% ~60fps
@@ -136,22 +138,30 @@ update_player(State) -> %% Dying, dont move
     State.
 
 
-update_car(State=#{car:=Car}) ->
+update_cars(State) ->
+    Cars=maps:get(cars, State),
+    State#{cars := [update_car(C) || C <- Cars]}.
+
+update_car(Car) ->
     X = maps:get(x, Car) - 1,
     case X of
-        -16 -> State#{car:=Car#{x=>?WIDTH+16}};
-        _ -> State#{car:=Car#{x=>X}}
+        -16 -> Car#{x=>?WIDTH+16};
+        _ -> Car#{x=>X}
     end.
 
 check_collision(State=#{player:=#{dying:=0}}) ->
     Player=maps:get(player, State),
-    case sdl_rect:has_intersection(maps:get(player, State), maps:get(car, State)) of
+    Cars=maps:get(cars, State),
+    case check_collision(Player, Cars) of
         false -> Dying=0, ok;
         true -> Dying=1, io:format("COLLISION~n")
     end,
     State#{player:=Player#{dying=>Dying}};
 check_collision(State) -> %% No collision check when dying
     State.
+
+check_collision(Player, ObjectList) ->
+    lists:any(fun(C) -> sdl_rect:has_intersection(Player, C) end, ObjectList).
 
 %% To be improved...
 render_score(Renderer, Texture, Value) ->
@@ -201,19 +211,20 @@ render_player(Renderer, Texture, Player) ->
                            #{x=>maps:get(face, Player)*16, y=>0, w=>16, h=>16},
                            Player, get_angle(maps:get(dir, Player)), undefined, [none]).
 
-render_car(Renderer, Texture, Car) ->
-    ok = sdl_renderer:copy(Renderer, Texture,
+render_cars(Renderer, Texture, Cars) ->
+    [ok = sdl_renderer:copy(Renderer, Texture,
                            #{x=>3*16, y=>0, w=>16, h=>16},
-                           Car).
+                            C) || C <- Cars],
+    ok.
 
-render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, car:=Car}) ->
+render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Cars}) ->
     ok = sdl_renderer:clear(Renderer),
     ok = sdl_renderer:copy(Renderer, maps:get(background, Textures),
                            undefined, #{x=>0, y=>0, w=>224, h=>256}),
 
     ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State)),
     ok = render_player(Renderer, maps:get(sprites, Textures), Player),
-    ok = render_car(Renderer, maps:get(sprites, Textures), Car),
+    ok = render_cars(Renderer, maps:get(sprites, Textures), Cars),
 
     ok = sdl_renderer:present(Renderer).
 
