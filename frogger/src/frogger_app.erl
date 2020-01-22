@@ -58,9 +58,23 @@ init() ->
     loop(#{window=>Window, renderer=>Renderer,
            textures=>#{background=>TextureBack, sprites=>TextureSprites},
            score=>0,
-           player=>#{x=>16*7, y=>16*14, w=>16, h=>16, dir=>up, face=>2, jump=>0, dying=>0},
-           cars=>[#{x=>?WIDTH+16, y=>16*13, w=>16, h=>16},
-                  #{x=>?WIDTH+16, y=>16*11, w=>16, h=>16}]
+           player=>#{x=>16*7, y=>16*14, w=>16, h=>16,
+                     dir=>up, sprite_h=>2, sprite_v=>0, jump=>0, dying=>0},
+           cars=>[
+                  #{x=>0,     y=>16*9,  w=>16, h=>16, sprite_h=>5, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck front
+                  #{x=>0+16,  y=>16*9,  w=>16, h=>16, sprite_h=>6, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck back
+                  #{x=>0+100, y=>16*9,  w=>16, h=>16, sprite_h=>5, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck front
+                  #{x=>0+116, y=>16*9,  w=>16, h=>16, sprite_h=>6, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck back
+                  #{x=>0,     y=>16*10, w=>16, h=>16, sprite_h=>8, sprite_v=>0, dir=>right, speed=>fast},   %% Green/White
+                  #{x=>0,     y=>16*11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>0+75,  y=>16*11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>0+150, y=>16*11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>0,     y=>16*12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>0+50,  y=>16*12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>0+150, y=>16*12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>0,     y=>16*13, w=>16, h=>16, sprite_h=>3, sprite_v=>0, dir=>left,  speed=>normal}, %% Yellow
+                  #{x=>0+128, y=>16*13, w=>16, h=>16, sprite_h=>3, sprite_v=>0, dir=>left,  speed=>normal}  %% Yellow
+                 ]
           }).
 
 loop(State) ->
@@ -69,7 +83,7 @@ loop(State) ->
     State4 = update_cars(State3),
     State5 = check_collision(State4),
     render(State5),
-    timer:sleep(1000 div 60), %% ~60fps
+    timer:sleep(1000 div 50), %% ~50fps
     loop(State5).
 
 
@@ -124,7 +138,7 @@ update_player(State=#{player:=#{jump:=0}}) -> %% Not moving
 update_player(State=#{player:=#{jump:=9}}) -> %% Finished jump
     Player=maps:get(player, State),
     Score=maps:get(score, State) + 10,
-    State#{score:=Score, player := Player#{face=>2, jump=>0}};
+    State#{score:=Score, player := Player#{sprite_h=>2, jump=>0}};
 update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an not dying
     NewFace = get_player_face(Jump),
     NewJump = Jump + 1,
@@ -137,7 +151,7 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an 
     io:format("Player: x:~B,y:~B,w:~B,h:~B~n", [X,Y,maps:get(w, Player),maps:get(h, Player)]),
     State#{player := Player#{x => X,
                              y => Y,
-                             face => NewFace,
+                             sprite_h => NewFace,
                              jump => NewJump}};
 update_player(State) -> %% Dying, dont move
     State.
@@ -147,11 +161,25 @@ update_cars(State) ->
     Cars=maps:get(cars, State),
     State#{cars := [update_car(C) || C <- Cars]}.
 
+update_car(Car=#{dir:=left}) ->
+    case maps:get(speed, Car) of
+        slow -> X=maps:get(x, Car) - 1;
+        normal -> X=maps:get(x, Car) - 1;
+        fast -> X=maps:get(x, Car) - 3
+    end,
+    if
+        X < -15 -> Car#{x=>?WIDTH+16};
+        true -> Car#{x=>X}
+    end;
 update_car(Car) ->
-    X = maps:get(x, Car) - 1,
-    case X of
-        -16 -> Car#{x=>?WIDTH+16};
-        _ -> Car#{x=>X}
+    case maps:get(speed, Car) of
+        slow -> X=maps:get(x, Car) + 1;
+        normal -> X=maps:get(x, Car) + 1;
+        fast -> X=maps:get(x, Car) + 3
+    end,
+    if
+        X > ?WIDTH+15 -> Car#{x=>-16};
+        true -> Car#{x=>X}
     end.
 
 check_collision(State=#{player:=#{dying:=0}}) ->
@@ -168,7 +196,7 @@ check_collision(State) -> %% No collision check when dying
 check_collision(Player, ObjectList) ->
     lists:any(fun(C) -> sdl_rect:has_intersection(Player, C) end, ObjectList).
 
-%% Renders
+%% Renders graphics
 
 render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Cars}) ->
     ok = sdl_renderer:clear(Renderer),
@@ -176,8 +204,8 @@ render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Car
                            undefined, scale_rect(#{x=>0, y=>0, w=>?WIDTH, h=>?HEIGHT})),
 
     ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State)),
-    ok = render_player(Renderer, maps:get(sprites, Textures), Player),
     ok = render_cars(Renderer, maps:get(sprites, Textures), Cars),
+    ok = render_player(Renderer, maps:get(sprites, Textures), Player),
 
     ok = sdl_renderer:present(Renderer).
 
@@ -193,7 +221,7 @@ get_angle(Dir) ->
     end.
 
 %% To be improved...
-render_score(Renderer, Texture, Value) ->
+render_score(Renderer, Texture, Score) ->
     ok = sdl_renderer:copy(Renderer, Texture,
                            #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
                            scale_rect(#{x=>0*8, y=>8, w=>8, h=>8})),
@@ -204,19 +232,19 @@ render_score(Renderer, Texture, Value) ->
                            #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
                            scale_rect(#{x=>2*8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 10000) rem 10)*8, y=>8, w=>8, h=>8},
+                           #{x=>((Score div 10000) rem 10)*8, y=>8, w=>8, h=>8},
                            scale_rect(#{x=>3*8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 1000) rem 10)*8, y=>8, w=>8, h=>8},
+                           #{x=>((Score div 1000) rem 10)*8, y=>8, w=>8, h=>8},
                            scale_rect(#{x=>4*8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 100) rem 10)*8, y=>8, w=>8, h=>8},
+                           #{x=>((Score div 100) rem 10)*8, y=>8, w=>8, h=>8},
                            scale_rect(#{x=>5*8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 10) rem 10)*8, y=>8, w=>8, h=>8},
+                           #{x=>((Score div 10) rem 10)*8, y=>8, w=>8, h=>8},
                            scale_rect(#{x=>6*8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 1) rem 10)*8, y=>8, w=>8, h=>8},
+                           #{x=>((Score div 1) rem 10)*8, y=>8, w=>8, h=>8},
                            scale_rect(#{x=>7*8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
                            #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
@@ -227,13 +255,15 @@ render_score(Renderer, Texture, Value) ->
     ok.
 
 render_player(Renderer, Texture, Player) ->
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>maps:get(face, Player)*16, y=>0, w=>16, h=>16},
-                           scale_rect(Player),
-                           get_angle(maps:get(dir, Player)), undefined, [none]).
+    sdl_renderer:copy(Renderer, Texture,
+                      #{x=>maps:get(sprite_h, Player)*16, y=>maps:get(sprite_v, Player)*16,
+                        w=>16, h=>16},
+                      scale_rect(Player),
+                      get_angle(maps:get(dir, Player)), undefined, [none]).
 
 render_cars(Renderer, Texture, Cars) ->
     [ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>3*16, y=>0, w=>16, h=>16},
+                           #{x=>maps:get(sprite_h, C)*16, y=>maps:get(sprite_v, C)*16,
+                             w=>16, h=>16},
                             scale_rect(C)) || C <- Cars],
     ok.
