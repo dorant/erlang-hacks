@@ -12,6 +12,8 @@
 
 -export([start/2, stop/1]).
 
+-define(SCALE, 2). %% Graphics scaling
+
 -define(KEYCODE_Q, 20).
 -define(KEYCODE_RIGHT, 79).
 -define(KEYCODE_LEFT, 80).
@@ -33,7 +35,7 @@ stop(_State) ->
 init() ->
     ok = sdl:start([video]),
     ok = sdl:stop_on_exit(),
-    {ok, Window} = sdl_window:create(<<"Frogger">>, 0, 0, ?WIDTH, ?HEIGHT, []),
+    {ok, Window} = sdl_window:create(<<"Frogger">>, 0, 0, ?WIDTH*?SCALE, ?HEIGHT*?SCALE, []),
     {ok, Renderer} = sdl_renderer:create(Window, -1, [accelerated, present_vsync]),
     ok = sdl_renderer:set_draw_color(Renderer, 100, 100, 100, 0),
     logger:info(#{ msg => "get priv" }),
@@ -80,6 +82,9 @@ events_loop(State) ->
         _ -> events_loop(State)
     end.
 
+terminate() ->
+    init:stop(),
+    exit(normal).
 
 move_player(State=#{player:=#{jump:=0}}, Scancode) ->
     Player=maps:get(player, State),
@@ -163,40 +168,21 @@ check_collision(State) -> %% No collision check when dying
 check_collision(Player, ObjectList) ->
     lists:any(fun(C) -> sdl_rect:has_intersection(Player, C) end, ObjectList).
 
-%% To be improved...
-render_score(Renderer, Texture, Value) ->
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           #{x=>0*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           #{x=>1*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           #{x=>2*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 10000) rem 10)*8, y=>8, w=>8, h=>8},
-                           #{x=>3*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 1000) rem 10)*8, y=>8, w=>8, h=>8},
-                           #{x=>4*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 100) rem 10)*8, y=>8, w=>8, h=>8},
-                           #{x=>5*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 10) rem 10)*8, y=>8, w=>8, h=>8},
-                           #{x=>6*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Value div 1) rem 10)*8, y=>8, w=>8, h=>8},
-                           #{x=>7*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           #{x=>8*8, y=>8, w=>8, h=>8}),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           #{x=>9*8, y=>8, w=>8, h=>8}),
-    ok.
+%% Renders
 
+render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Cars}) ->
+    ok = sdl_renderer:clear(Renderer),
+    ok = sdl_renderer:copy(Renderer, maps:get(background, Textures),
+                           undefined, scale_rect(#{x=>0, y=>0, w=>?WIDTH, h=>?HEIGHT})),
+
+    ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State)),
+    ok = render_player(Renderer, maps:get(sprites, Textures), Player),
+    ok = render_cars(Renderer, maps:get(sprites, Textures), Cars),
+
+    ok = sdl_renderer:present(Renderer).
+
+scale_rect(#{x:=X, y:=Y, w:=W, h:=H}) ->
+    #{x=>X*?SCALE, y=>Y*?SCALE, w=>W*?SCALE, h=>H*?SCALE}.
 
 get_angle(Dir) ->
     case Dir of
@@ -206,28 +192,48 @@ get_angle(Dir) ->
         up -> float(0)
     end.
 
+%% To be improved...
+render_score(Renderer, Texture, Value) ->
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>0*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>1*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>2*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>((Value div 10000) rem 10)*8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>3*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>((Value div 1000) rem 10)*8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>4*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>((Value div 100) rem 10)*8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>5*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>((Value div 10) rem 10)*8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>6*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>((Value div 1) rem 10)*8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>7*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>8*8, y=>8, w=>8, h=>8})),
+    ok = sdl_renderer:copy(Renderer, Texture,
+                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>9*8, y=>8, w=>8, h=>8})),
+    ok.
+
 render_player(Renderer, Texture, Player) ->
     ok = sdl_renderer:copy(Renderer, Texture,
                            #{x=>maps:get(face, Player)*16, y=>0, w=>16, h=>16},
-                           Player, get_angle(maps:get(dir, Player)), undefined, [none]).
+                           scale_rect(Player),
+                           get_angle(maps:get(dir, Player)), undefined, [none]).
 
 render_cars(Renderer, Texture, Cars) ->
     [ok = sdl_renderer:copy(Renderer, Texture,
                            #{x=>3*16, y=>0, w=>16, h=>16},
-                            C) || C <- Cars],
+                            scale_rect(C)) || C <- Cars],
     ok.
-
-render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Cars}) ->
-    ok = sdl_renderer:clear(Renderer),
-    ok = sdl_renderer:copy(Renderer, maps:get(background, Textures),
-                           undefined, #{x=>0, y=>0, w=>224, h=>256}),
-
-    ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State)),
-    ok = render_player(Renderer, maps:get(sprites, Textures), Player),
-    ok = render_cars(Renderer, maps:get(sprites, Textures), Cars),
-
-    ok = sdl_renderer:present(Renderer).
-
-terminate() ->
-    init:stop(),
-    exit(normal).
