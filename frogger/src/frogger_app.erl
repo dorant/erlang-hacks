@@ -35,7 +35,7 @@ stop(_State) ->
 init() ->
     ok = sdl:start([video]),
     ok = sdl:stop_on_exit(),
-    {ok, Window} = sdl_window:create(<<"Frogger">>, 0, 0, ?WIDTH*?SCALE, ?HEIGHT*?SCALE, []),
+    {ok, Window} = sdl_window:create(<<"Frogger">>, 0, 0, ?WIDTH * ?SCALE, ?HEIGHT * ?SCALE, []),
     {ok, Renderer} = sdl_renderer:create(Window, -1, [accelerated, present_vsync]),
     ok = sdl_renderer:set_draw_color(Renderer, 100, 100, 100, 0),
     logger:info(#{ msg => "get priv" }),
@@ -58,22 +58,22 @@ init() ->
     loop(#{window=>Window, renderer=>Renderer,
            textures=>#{background=>TextureBack, sprites=>TextureSprites},
            score=>0,
-           player=>#{x=>16*7, y=>16*14, w=>16, h=>16,
+           player=>#{x=>16 * 7, y=>16 * 14, w=>16, h=>16,
                      dir=>up, sprite_h=>2, sprite_v=>0, jump=>0, dying=>0},
            cars=>[
-                  #{x=>0,     y=>16*9,  w=>16, h=>16, sprite_h=>5, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck front
-                  #{x=>0+16,  y=>16*9,  w=>16, h=>16, sprite_h=>6, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck back
-                  #{x=>0+100, y=>16*9,  w=>16, h=>16, sprite_h=>5, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck front
-                  #{x=>0+116, y=>16*9,  w=>16, h=>16, sprite_h=>6, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck back
-                  #{x=>0,     y=>16*10, w=>16, h=>16, sprite_h=>8, sprite_v=>0, dir=>right, speed=>fast},   %% Green/White
-                  #{x=>0,     y=>16*11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
-                  #{x=>0+75,  y=>16*11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
-                  #{x=>0+150, y=>16*11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
-                  #{x=>0,     y=>16*12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
-                  #{x=>0+50,  y=>16*12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
-                  #{x=>0+150, y=>16*12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
-                  #{x=>0,     y=>16*13, w=>16, h=>16, sprite_h=>3, sprite_v=>0, dir=>left,  speed=>normal}, %% Yellow
-                  #{x=>0+128, y=>16*13, w=>16, h=>16, sprite_h=>3, sprite_v=>0, dir=>left,  speed=>normal}  %% Yellow
+                  #{x=>0,   y=>16 * 9,  w=>16, h=>16, sprite_h=>5, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck front
+                  #{x=>16,  y=>16 * 9,  w=>16, h=>16, sprite_h=>6, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck back
+                  #{x=>100, y=>16 * 9,  w=>16, h=>16, sprite_h=>5, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck front
+                  #{x=>116, y=>16 * 9,  w=>16, h=>16, sprite_h=>6, sprite_v=>0, dir=>left,  speed=>slow},   %% Truck back
+                  #{x=>0,   y=>16 * 10, w=>16, h=>16, sprite_h=>8, sprite_v=>0, dir=>right, speed=>fast},   %% Green/White
+                  #{x=>0,   y=>16 * 11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>75,  y=>16 * 11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>150, y=>16 * 11, w=>16, h=>16, sprite_h=>7, sprite_v=>0, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>0,   y=>16 * 12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>50,  y=>16 * 12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>150, y=>16 * 12, w=>16, h=>16, sprite_h=>4, sprite_v=>0, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>0,   y=>16 * 13, w=>16, h=>16, sprite_h=>3, sprite_v=>0, dir=>left,  speed=>normal}, %% Yellow
+                  #{x=>128, y=>16 * 13, w=>16, h=>16, sprite_h=>3, sprite_v=>0, dir=>left,  speed=>normal}  %% Yellow
                  ]
           }).
 
@@ -157,7 +157,7 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an 
         down  -> X = maps:get(x, Player),     Y = maps:get(y, Player) + 2;
         up    -> X = maps:get(x, Player),     Y = maps:get(y, Player) - 2
     end,
-    io:format("Player: x:~B,y:~B,w:~B,h:~B~n", [X,Y,maps:get(w, Player),maps:get(h, Player)]),
+    io:format("Player: x:~B,y:~B,w:~B,h:~B~n", [X, Y, maps:get(w, Player), maps:get(h, Player)]),
     State#{player := Player#{x => X,
                              y => Y,
                              sprite_h => NewFace,
@@ -166,12 +166,13 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an 
 update_player(State=#{player:=Player=#{dying:=Dying}}) -> %% Dying, dont move
     Scale=6,
     NewFace=get_player_deadface(Dying div Scale),
-    if Dying == 4*Scale -> NewDying=4*Scale;
+    if Dying == 4 * Scale -> NewDying=4 * Scale;
        true       -> NewDying=Dying + 1
     end,
     State#{player := Player#{sprite_h=>NewFace,
                              sprite_v=>3,
-                             dying=>NewDying}}.
+                             dying=>NewDying,
+                             dir=>up}}.
 
 
 update_cars(State) ->
@@ -185,7 +186,7 @@ update_car(Car=#{dir:=left}) ->
         fast -> X=maps:get(x, Car) - 3
     end,
     if
-        X < -15 -> Car#{x=>?WIDTH+16};
+        X < -15 -> Car#{x=>?WIDTH + 16};
         true -> Car#{x=>X}
     end;
 update_car(Car) ->
@@ -195,7 +196,7 @@ update_car(Car) ->
         fast -> X=maps:get(x, Car) + 3
     end,
     if
-        X > ?WIDTH+15 -> Car#{x=>-16};
+        X > ?WIDTH + 15 -> Car#{x=>-16};
         true -> Car#{x=>X}
     end.
 
@@ -227,7 +228,7 @@ render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Car
     ok = sdl_renderer:present(Renderer).
 
 scale_rect(#{x:=X, y:=Y, w:=W, h:=H}) ->
-    #{x=>X*?SCALE, y=>Y*?SCALE, w=>W*?SCALE, h=>H*?SCALE}.
+    #{x=>X * ?SCALE, y=>Y * ?SCALE, w=>W * ?SCALE, h=>H * ?SCALE}.
 
 get_angle(Dir) ->
     case Dir of
@@ -240,47 +241,47 @@ get_angle(Dir) ->
 %% To be improved...
 render_score(Renderer, Texture, Score) ->
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>0*8, y=>8, w=>8, h=>8})),
+                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>0 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>1*8, y=>8, w=>8, h=>8})),
+                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>1 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>2*8, y=>8, w=>8, h=>8})),
+                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>2 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 10000) rem 10)*8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>3*8, y=>8, w=>8, h=>8})),
+                           #{x=>((Score div 10000) rem 10) * 8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>3 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 1000) rem 10)*8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>4*8, y=>8, w=>8, h=>8})),
+                           #{x=>((Score div 1000) rem 10) * 8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>4 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 100) rem 10)*8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>5*8, y=>8, w=>8, h=>8})),
+                           #{x=>((Score div 100) rem 10) * 8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>5 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 10) rem 10)*8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>6*8, y=>8, w=>8, h=>8})),
+                           #{x=>((Score div 10) rem 10) * 8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>6 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 1) rem 10)*8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>7*8, y=>8, w=>8, h=>8})),
+                           #{x=>((Score div 1) rem 10) * 8, y=>8, w=>8, h=>8},
+                           scale_rect(#{x=>7 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>8*8, y=>8, w=>8, h=>8})),
+                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>8 * 8, y=>8, w=>8, h=>8})),
     ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10*8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>9*8, y=>8, w=>8, h=>8})),
+                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
+                           scale_rect(#{x=>9 * 8, y=>8, w=>8, h=>8})),
     ok.
 
 render_player(Renderer, Texture, Player) ->
     sdl_renderer:copy(Renderer, Texture,
-                      #{x=>maps:get(sprite_h, Player)*16, y=>maps:get(sprite_v, Player)*16,
+                      #{x=>maps:get(sprite_h, Player) * 16, y=>maps:get(sprite_v, Player) * 16,
                         w=>16, h=>16},
                       scale_rect(Player),
                       get_angle(maps:get(dir, Player)), undefined, [none]).
 
 render_cars(Renderer, Texture, Cars) ->
     [ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>maps:get(sprite_h, C)*16, y=>maps:get(sprite_v, C)*16,
+                           #{x=>maps:get(sprite_h, C) * 16, y=>maps:get(sprite_v, C) * 16,
                              w=>16, h=>16},
                             scale_rect(C)) || C <- Cars],
     ok.
