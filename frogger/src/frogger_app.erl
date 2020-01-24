@@ -133,13 +133,13 @@ get_player_face(Jump) ->
         8 -> 0
     end.
 
-get_player_deadface(Id) ->
+get_player_splatface(Id) ->
     case Id of
-        0 -> 1;
-        1 -> 1;
-        2 -> 2;
-        3 -> 3;
-        4 -> 0
+        0 -> {0, 4};
+        1 -> {0, 4};
+        2 -> {1, 4};
+        3 -> {2, 4};
+        4 -> {0, 3}
     end.
 
 update_player(State=#{player:=#{jump:=0, dying:=0}}) -> %% Not moving
@@ -165,12 +165,12 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an 
                              jump => NewJump}};
 update_player(State=#{player:=Player=#{dying:=Dying}}) -> %% Dying, dont move
     Scale=6,
-    NewFace=get_player_deadface(Dying div Scale),
+    {H, V}=get_player_splatface(Dying div Scale),
     if Dying == 4 * Scale -> NewDying=4 * Scale;
        true       -> NewDying=Dying + 1
     end,
-    State#{player := Player#{sprite_h=>NewFace,
-                             sprite_v=>3,
+    State#{player := Player#{sprite_h=>H,
+                             sprite_v=>V,
                              dying=>NewDying,
                              dir=>up}}.
 
@@ -200,6 +200,7 @@ update_car(Car) ->
         true -> Car#{x=>X}
     end.
 
+
 check_collision(State=#{player:=#{dying:=0}}) ->
     Player=maps:get(player, State),
     Cars=maps:get(cars, State),
@@ -222,55 +223,41 @@ render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Car
                            undefined, scale_rect(#{x=>0, y=>0, w=>?WIDTH, h=>?HEIGHT})),
 
     ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State)),
-    ok = render_cars(Renderer, maps:get(sprites, Textures), Cars),
     ok = render_player(Renderer, maps:get(sprites, Textures), Player),
+    ok = render_cars(Renderer, maps:get(sprites, Textures), Cars),
 
     ok = sdl_renderer:present(Renderer).
 
 scale_rect(#{x:=X, y:=Y, w:=W, h:=H}) ->
     #{x=>X * ?SCALE, y=>Y * ?SCALE, w=>W * ?SCALE, h=>H * ?SCALE}.
 
-get_angle(Dir) ->
-    case Dir of
-        right -> float(90);
-        left -> float(270);
-        down -> float(180);
-        up -> float(0)
-    end.
+get_angle(right) -> float(90);
+get_angle(left) -> float(270);
+get_angle(down) -> float(180);
+get_angle(up) -> float(0).
 
-%% To be improved...
 render_score(Renderer, Texture, Score) ->
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>0 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>1 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>2 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 10000) rem 10) * 8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>3 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 1000) rem 10) * 8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>4 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 100) rem 10) * 8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>5 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 10) rem 10) * 8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>6 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>((Score div 1) rem 10) * 8, y=>8, w=>8, h=>8},
-                           scale_rect(#{x=>7 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>8 * 8, y=>8, w=>8, h=>8})),
-    ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
-                           scale_rect(#{x=>9 * 8, y=>8, w=>8, h=>8})),
+    ok = render_score_digit(Renderer, Texture, 0, empty),
+    ok = render_score_digit(Renderer, Texture, 1, empty),
+    ok = render_score_digit(Renderer, Texture, 2, empty),
+    ok = render_score_digit(Renderer, Texture, 3, (Score div 10000) rem 10),
+    ok = render_score_digit(Renderer, Texture, 4, (Score div 1000) rem 10),
+    ok = render_score_digit(Renderer, Texture, 5, (Score div 100) rem 10),
+    ok = render_score_digit(Renderer, Texture, 6, (Score div 10) rem 10),
+    ok = render_score_digit(Renderer, Texture, 7, Score rem 10),
+    ok = render_score_digit(Renderer, Texture, 8, empty),
+    ok = render_score_digit(Renderer, Texture, 9, empty),
     ok.
+
+render_score_digit(Renderer, Texture, Position, Digit) when is_integer(Digit) ->
+    sdl_renderer:copy(Renderer, Texture,
+                      #{x=>Digit * 8, y=>8, w=>8, h=>8},
+                      scale_rect(#{x=>Position * 8, y=>8, w=>8, h=>8}));
+render_score_digit(Renderer, Texture, Position, _) ->
+    sdl_renderer:copy(Renderer, Texture,
+                      #{x=>10 * 8, y=>8, w=>8, h=>8}, %% empty box
+                      scale_rect(#{x=>Position * 8, y=>8, w=>8, h=>8})).
+
 
 render_player(Renderer, Texture, Player) ->
     sdl_renderer:copy(Renderer, Texture,
