@@ -23,6 +23,10 @@
 -define(WIDTH, 224).
 -define(HEIGHT, 256).
 
+%% face defines which 16*16 pixel area to use for the sprite
+-record(face,{h,v}).
+
+
 start(_StartType, _StartArgs) ->
     spawn(fun init/0),
     frogger_sup:start_link().
@@ -59,21 +63,21 @@ init() ->
            textures=>#{background=>TextureBack, sprites=>TextureSprites},
            score=>0,
            player=>#{x=>16 * 7, y=>16 * 14, w=>16, h=>16,
-                     dir=>up, face_h=>2, face_v=>0, jump=>0, dying=>0},
+                     dir=>up, face=>#face{h=2, v=0}, jump=>0, dying=>0},
            cars=>[
-                  #{x=>0,   y=>16 * 9,  w=>16, h=>16, face_h=>5, face_v=>0, dir=>left,  speed=>slow},   %% Truck front
-                  #{x=>16,  y=>16 * 9,  w=>16, h=>16, face_h=>6, face_v=>0, dir=>left,  speed=>slow},   %% Truck back
-                  #{x=>100, y=>16 * 9,  w=>16, h=>16, face_h=>5, face_v=>0, dir=>left,  speed=>slow},   %% Truck front
-                  #{x=>116, y=>16 * 9,  w=>16, h=>16, face_h=>6, face_v=>0, dir=>left,  speed=>slow},   %% Truck back
-                  #{x=>0,   y=>16 * 10, w=>16, h=>16, face_h=>8, face_v=>0, dir=>right, speed=>fast},   %% Green/White
-                  #{x=>0,   y=>16 * 11, w=>16, h=>16, face_h=>7, face_v=>0, dir=>left,  speed=>normal}, %% Purple
-                  #{x=>75,  y=>16 * 11, w=>16, h=>16, face_h=>7, face_v=>0, dir=>left,  speed=>normal}, %% Purple
-                  #{x=>150, y=>16 * 11, w=>16, h=>16, face_h=>7, face_v=>0, dir=>left,  speed=>normal}, %% Purple
-                  #{x=>0,   y=>16 * 12, w=>16, h=>16, face_h=>4, face_v=>0, dir=>right, speed=>normal}, %% Bulldozer
-                  #{x=>50,  y=>16 * 12, w=>16, h=>16, face_h=>4, face_v=>0, dir=>right, speed=>normal}, %% Bulldozer
-                  #{x=>150, y=>16 * 12, w=>16, h=>16, face_h=>4, face_v=>0, dir=>right, speed=>normal}, %% Bulldozer
-                  #{x=>0,   y=>16 * 13, w=>16, h=>16, face_h=>3, face_v=>0, dir=>left,  speed=>normal}, %% Yellow
-                  #{x=>128, y=>16 * 13, w=>16, h=>16, face_h=>3, face_v=>0, dir=>left,  speed=>normal}  %% Yellow
+                  #{x=>0,   y=>16 * 9,  w=>16, h=>16, face=>#face{h=5, v=0}, dir=>left,  speed=>slow},   %% Truck front
+                  #{x=>16,  y=>16 * 9,  w=>16, h=>16, face=>#face{h=6, v=0}, dir=>left,  speed=>slow},   %% Truck back
+                  #{x=>100, y=>16 * 9,  w=>16, h=>16, face=>#face{h=5, v=0}, dir=>left,  speed=>slow},   %% Truck front
+                  #{x=>116, y=>16 * 9,  w=>16, h=>16, face=>#face{h=6, v=0}, dir=>left,  speed=>slow},   %% Truck back
+                  #{x=>0,   y=>16 * 10, w=>16, h=>16, face=>#face{h=8, v=0}, dir=>right, speed=>fast},   %% Green/White
+                  #{x=>0,   y=>16 * 11, w=>16, h=>16, face=>#face{h=7, v=0}, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>75,  y=>16 * 11, w=>16, h=>16, face=>#face{h=7, v=0}, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>150, y=>16 * 11, w=>16, h=>16, face=>#face{h=7, v=0}, dir=>left,  speed=>normal}, %% Purple
+                  #{x=>0,   y=>16 * 12, w=>16, h=>16, face=>#face{h=4, v=0}, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>50,  y=>16 * 12, w=>16, h=>16, face=>#face{h=4, v=0}, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>150, y=>16 * 12, w=>16, h=>16, face=>#face{h=4, v=0}, dir=>right, speed=>normal}, %% Bulldozer
+                  #{x=>0,   y=>16 * 13, w=>16, h=>16, face=>#face{h=3, v=0}, dir=>left,  speed=>normal}, %% Yellow
+                  #{x=>128, y=>16 * 13, w=>16, h=>16, face=>#face{h=3, v=0}, dir=>left,  speed=>normal}  %% Yellow
                  ],
            river=>log(3, 0, normal, 4) ++ log(3, 6, normal, 4) ++ log(3, 11, normal, 4) ++
                turtle_group(2, 4, 0, normal) ++ turtle_group(2, 4, 4, normal) ++ turtle_group(2, 4, 8, normal) ++ turtle_group(2, 4, 12, normal) ++
@@ -128,41 +132,42 @@ move_player(State, _Scancode) ->  %% No movement change during jump or dying
 
 
 turtle_group(3, Lane, Pos, Speed) ->
-    [#{x=>16 * Pos,       y=>16 * Lane, w=>16, h=>16, face_h=>0, face_v=>5, dir=>left, speed=>Speed},
-     #{x=>16 * (Pos + 1), y=>16 * Lane, w=>16, h=>16, face_h=>0, face_v=>5, dir=>left, speed=>Speed},
-     #{x=>16 * (Pos + 2), y=>16 * Lane, w=>16, h=>16, face_h=>0, face_v=>5, dir=>left, speed=>Speed}];
+    [#{x=>16 * Pos,       y=>16 * Lane, w=>16, h=>16, face=>#face{h=0, v=5}, dir=>left, speed=>Speed},
+     #{x=>16 * (Pos + 1), y=>16 * Lane, w=>16, h=>16, face=>#face{h=0, v=5}, dir=>left, speed=>Speed},
+     #{x=>16 * (Pos + 2), y=>16 * Lane, w=>16, h=>16, face=>#face{h=0, v=5}, dir=>left, speed=>Speed}];
 turtle_group(2, Lane, Pos, Speed) ->
-    [#{x=>16 * Pos,       y=>16 * Lane, w=>16, h=>16, face_h=>0, face_v=>5, dir=>left, speed=>Speed},
-     #{x=>16 * (Pos + 1), y=>16 * Lane, w=>16, h=>16, face_h=>0, face_v=>5, dir=>left, speed=>Speed}].
+    [#{x=>16 * Pos,       y=>16 * Lane, w=>16, h=>16, face=>#face{h=0, v=5}, dir=>left, speed=>Speed},
+     #{x=>16 * (Pos + 1), y=>16 * Lane, w=>16, h=>16, face=>#face{h=0, v=5}, dir=>left, speed=>Speed}].
 
 log(Lane, Pos, Speed, Length) ->
-    [#{x=>16 * Pos,       y=>16 * Lane, w=>16, h=>16, face_h=>6, face_v=>8, dir=>right, speed=>Speed}] ++
+    [#{x=>16 * Pos,       y=>16 * Lane, w=>16, h=>16, face=>#face{h=6, v=8}, dir=>right, speed=>Speed}] ++
         log_middle(Lane, Pos + 1, Speed, Length - 2, []) ++
-        [#{x=>16 * (Pos + (Length-1)), y=>16 * Lane, w=>16, h=>16, face_h=>8, face_v=>8, dir=>right, speed=>Speed}].
+        [#{x=>16 * (Pos + (Length-1)), y=>16 * Lane, w=>16, h=>16, face=>#face{h=8, v=8}, dir=>right, speed=>Speed}].
 
 log_middle(_Lane, _Pos, _Speed, Length, Acc) when Length == 0 -> Acc;
 log_middle(Lane, Pos, Speed, Length, Acc) ->
-    log_middle(Lane, Pos + 1, Speed, Length - 1, Acc++[#{x=>16 * Pos, y=>16 * Lane, w=>16, h=>16, face_h=>7, face_v=>8, dir=>right, speed=>Speed}]).
+    log_middle(Lane, Pos + 1, Speed, Length - 1, Acc++[#{x=>16 * Pos, y=>16 * Lane, w=>16, h=>16, face=>#face{h=7, v=8}, dir=>right, speed=>Speed}]).
 
 get_player_face(Jump) ->
     case Jump of
-        1 -> 2;
-        2 -> 2;
-        3 -> 1;
-        4 -> 1;
-        5 -> 1;
-        6 -> 1;
-        7 -> 0;
-        8 -> 0
+        0 -> #face{h=2, v=0};
+        1 -> #face{h=2, v=0};
+        2 -> #face{h=2, v=0};
+        3 -> #face{h=1, v=0};
+        4 -> #face{h=1, v=0};
+        5 -> #face{h=1, v=0};
+        6 -> #face{h=1, v=0};
+        7 -> #face{h=0, v=0};
+        8 -> #face{h=0, v=0}
     end.
 
 get_player_splatface(Id) ->
     case Id of
-        0 -> {0, 4};
-        1 -> {0, 4};
-        2 -> {1, 4};
-        3 -> {2, 4};
-        4 -> {0, 3}
+        0 -> #face{h=0, v=4};
+        1 -> #face{h=0, v=4};
+        2 -> #face{h=1, v=4};
+        3 -> #face{h=2, v=4};
+        4 -> #face{h=0, v=3}
     end.
 
 update_player(State=#{player:=#{jump:=0, dying:=0}}) -> %% Not moving
@@ -170,7 +175,7 @@ update_player(State=#{player:=#{jump:=0, dying:=0}}) -> %% Not moving
 update_player(State=#{player:=#{jump:=9, dying:=0}}) -> %% Finished jump
     Player=maps:get(player, State),
     Score=maps:get(score, State) + 10,
-    State#{score:=Score, player := Player#{face_h=>2, jump=>0}};
+    State#{score:=Score, player := Player#{face=>get_player_face(0), jump=>0}};
 update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an not dying
     NewFace = get_player_face(Jump),
     NewJump = Jump + 1,
@@ -183,17 +188,15 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an 
     io:format("Player: x:~B,y:~B,w:~B,h:~B~n", [X, Y, maps:get(w, Player), maps:get(h, Player)]),
     State#{player := Player#{x => X,
                              y => Y,
-                             face_h => NewFace,
-                             face_v => 0,
+                             face => NewFace,
                              jump => NewJump}};
 update_player(State=#{player:=Player=#{dying:=Dying}}) -> %% Dying, dont move
     Scale=6,
-    {H, V}=get_player_splatface(Dying div Scale),
+    NewFace=get_player_splatface(Dying div Scale),
     if Dying == 4 * Scale -> NewDying=4 * Scale;
        true               -> NewDying=Dying + 1
     end,
-    State#{player := Player#{face_h=>H,
-                             face_v=>V,
+    State#{player := Player#{face=>NewFace,
                              dying=>NewDying,
                              dir=>up}}.
 
@@ -285,15 +288,16 @@ render_score_digit(Renderer, Texture, Position, _) ->
 
 
 render_player(Renderer, Texture, Player) ->
+    Face = maps:get(face, Player),
     sdl_renderer:copy(Renderer, Texture,
-                      #{x=>maps:get(face_h, Player) * 16, y=>maps:get(face_v, Player) * 16,
+                      #{x=>Face#face.h * 16, y=>Face#face.v * 16,
                         w=>16, h=>16},
                       scale_rect(Player),
                       get_angle(maps:get(dir, Player)), undefined, [none]).
 
 render_sprites(Renderer, Texture, Sprites) ->
     [ok = sdl_renderer:copy(Renderer, Texture,
-                           #{x=>maps:get(face_h, S) * 16, y=>maps:get(face_v, S) * 16,
-                             w=>16, h=>16},
+                            #{x=>(maps:get(face, S))#face.h * 16, y=>(maps:get(face, S))#face.v * 16,
+                              w=>16, h=>16},
                             scale_rect(S)) || S <- Sprites],
     ok.
