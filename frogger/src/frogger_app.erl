@@ -23,6 +23,8 @@
 -define(WIDTH, 224).
 -define(HEIGHT, 256).
 
+-define(RIVER_BORDER, 128.0).
+
 %% face defines which 16*16 pixel area to use for the sprite
 -record(face,{h,v}).
 
@@ -181,7 +183,7 @@ get_player_splatface(Id) ->
         4 -> #face{h=0, v=3}
     end.
 
-update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < 128.0 -> %% River, moved by log or turtle
+update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < ?RIVER_BORDER -> %% River, moved by log or turtle
     Player=maps:get(player, State),
     X = maps:get(x, Player) + get_lane_speed(trunc(Y/16)),
     State#{player := Player#{x => X}};
@@ -191,7 +193,7 @@ update_player(State=#{player:=#{jump:=9, dying:=0}}) -> %% Finished jump
     Player=maps:get(player, State),
     Score=maps:get(score, State) + 10,
     State#{score:=Score, player := Player#{face=>get_player_face(0), jump=>0}};
-update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an not dying
+update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping and not dying
     NewFace = get_player_face(Jump),
     NewJump = Jump + 1,
     case maps:get(dir, Player) of
@@ -200,7 +202,7 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping an 
         down  -> X = maps:get(x, Player),     Y = maps:get(y, Player) + 2;
         up    -> X = maps:get(x, Player),     Y = maps:get(y, Player) - 2
     end,
-    io:format("Player: x:~B,y:~B~n", [trunc(X), trunc(Y)]),
+%%    io:format("Player: x:~B,y:~B~n", [trunc(X), trunc(Y)]),
     State#{player := Player#{x => X,
                              y => Y,
                              face => NewFace,
@@ -230,21 +232,29 @@ move_sprite(Sprite) ->
     end.
 
 
-check_collision(State=#{player:=#{dying:=0}}) ->
+check_collision(State=#{player:=#{dying:=0, y:=Y}}) when Y > ?RIVER_BORDER -> %% At road
     Player=maps:get(player, State),
     Cars=maps:get(cars, State),
     case check_collision(Player, Cars) of
-        false -> Dying=0, ok;
-        true -> Dying=1, io:format("COLLISION~n")
+        false -> Dying=0;
+        true -> Dying=1
     end,
     State#{player:=Player#{dying=>Dying}};
-check_collision(State) -> %% No collision check when dying
+check_collision(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < ?RIVER_BORDER -> %% At river
+    Player=maps:get(player, State),
+    River=maps:get(river, State),
+    case check_collision(Player, River) of
+        false -> Dying=1;
+        true -> Dying=0
+    end,
+    State#{player:=Player#{dying=>Dying}};
+check_collision(State) -> %% No collision check when dying or jumping(river)
     State.
 
 check_collision(Player, ObjectList) ->
     lists:any(fun(C) -> sdl_rect:has_intersection(to_rect(Player), to_rect(C)) end, ObjectList).
 
-check_borders(State=#{player:=Player=#{dying:=0, x:=X}}) when X > ?WIDTH ->
+check_borders(State=#{player:=Player=#{dying:=0, x:=X}}) when X > ?WIDTH-15.0 ->
     State#{player:=Player#{dying=>1}};
 check_borders(State=#{player:=Player=#{dying:=0, x:=X}}) when X < 0 ->
     State#{player:=Player#{dying=>1}};
@@ -300,6 +310,7 @@ render_score_digit(Renderer, Texture, Position, _) ->
 
 render_player(Renderer, Texture, Player) ->
     Face = maps:get(face, Player),
+%%    io:format("Player: x=~f, y=~f~n", [maps:get(x, Player), maps:get(y, Player)]),
     sdl_renderer:copy(Renderer, Texture,
                       to_rect(#{x=>Face#face.h * 16, y=>Face#face.v * 16,
                                 w=>16, h=>16}),
