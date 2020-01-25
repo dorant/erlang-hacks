@@ -91,9 +91,10 @@ loop(State) ->
     State3 = update_player(State2),
     State4 = update_sprites(State3),
     State5 = check_collision(State4),
-    render(State5),
+    State6 = check_borders(State5),
+    render(State6),
     timer:sleep(1000 div 50), %% ~50fps
-    loop(State5).
+    loop(State6).
 
 
 events_loop(State) ->
@@ -180,10 +181,10 @@ get_player_splatface(Id) ->
         4 -> #face{h=0, v=3}
     end.
 
-update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < 128.0 -> %% Not moving
-    io:format("River! y:~B ~n", [trunc(Y)]),
-    io:format("River! speed:~f~n", [get_lane_speed(trunc(Y/16))]),
-    State;
+update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < 128.0 -> %% River, moved by log or turtle
+    Player=maps:get(player, State),
+    X = maps:get(x, Player) + get_lane_speed(trunc(Y/16)),
+    State#{player := Player#{x => X}};
 update_player(State=#{player:=#{jump:=0, dying:=0}}) -> %% Not moving
     State;
 update_player(State=#{player:=#{jump:=9, dying:=0}}) -> %% Finished jump
@@ -243,6 +244,12 @@ check_collision(State) -> %% No collision check when dying
 check_collision(Player, ObjectList) ->
     lists:any(fun(C) -> sdl_rect:has_intersection(to_rect(Player), to_rect(C)) end, ObjectList).
 
+check_borders(State=#{player:=Player=#{dying:=0, x:=X}}) when X > ?WIDTH ->
+    State#{player:=Player#{dying=>1}};
+check_borders(State=#{player:=Player=#{dying:=0, x:=X}}) when X < 0 ->
+    State#{player:=Player#{dying=>1}};
+check_borders(State) ->
+    State.
 
 %% Renders graphics
 
