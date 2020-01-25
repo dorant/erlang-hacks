@@ -69,21 +69,21 @@ init() ->
                   #{x=>16.0,  y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, speed=>-0.5}, %% Truck back
                   #{x=>100,   y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, speed=>-0.5}, %% Truck front
                   #{x=>116.0, y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, speed=>-0.5}, %% Truck back
-                  #{x=>0,     y=>16.0 * 10, w=>16.0, h=>16.0, face=>#face{h=8, v=0}, speed=>3.0}, %% Green/White
+                  #{x=>0,     y=>16.0 * 10, w=>16.0, h=>16.0, face=>#face{h=8, v=0}, speed=>3.0},  %% Green/White
                   #{x=>0,     y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
                   #{x=>75,    y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
                   #{x=>150,   y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
-                  #{x=>0,     y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0}, %% Bulldozer
-                  #{x=>50,    y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0}, %% Bulldozer
-                  #{x=>150,   y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0}, %% Bulldozer
+                  #{x=>0,     y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
+                  #{x=>50,    y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
+                  #{x=>150,   y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
                   #{x=>0,     y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, speed=>-1.0}, %% Yellow
                   #{x=>128,   y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, speed=>-1.0}  %% Yellow
                  ],
-           river=>log(3, 0, get_lane_speed(3), 4) ++ log(3, 6, get_lane_speed(3), 4) ++ log(3, 11, get_lane_speed(3), 4) ++
-               turtle_group(4, 0, get_lane_speed(4), 2) ++ turtle_group(4, 4, get_lane_speed(4), 2) ++ turtle_group(4, 8, get_lane_speed(4), 2) ++ turtle_group(4, 12, get_lane_speed(4), 2) ++
-               log(5, 0, get_lane_speed(5), 6) ++
-               log(6, 0, get_lane_speed(6), 3) ++ log(6, 4, get_lane_speed(6), 3) ++ log(6, 8, get_lane_speed(6), 3) ++ log(6, 12, get_lane_speed(6), 3) ++
-               turtle_group(7, 0, get_lane_speed(7), 3) ++ turtle_group(7, 4, get_lane_speed(7), 3) ++ turtle_group(7, 8, get_lane_speed(7), 3) ++ turtle_group(7, 12, get_lane_speed(7), 3)
+           river=>log(3, 0, 4) ++ log(3, 6, 4) ++ log(3, 11, 4) ++
+               turtle_group(4, 0, 2) ++ turtle_group(4, 4, 2) ++ turtle_group(4, 8, 2) ++ turtle_group(4, 12, 2) ++
+               log(5, 0, 6) ++
+               log(6, 0, 3) ++ log(6, 4, 3) ++ log(6, 8, 3) ++ log(6, 12, 3) ++
+               turtle_group(7, 0, 3) ++ turtle_group(7, 4, 3) ++ turtle_group(7, 8, 3) ++ turtle_group(7, 12, 3)
           }).
 
 loop(State) ->
@@ -131,18 +131,18 @@ move_player(State, _Scancode) ->  %% No movement change during jump or dying
     State.
 
 
-turtle_group(Lane, Pos, Speed, 3) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed},
-     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed},
-     #{x=>16.0 * (Pos + 2), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed}];
-turtle_group(Lane, Pos, Speed, 2) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed},
-     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed}].
+turtle_group(Lane, Pos, 3) ->
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)},
+     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)},
+     #{x=>16.0 * (Pos + 2), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)}];
+turtle_group(Lane, Pos, 2) ->
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)},
+     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)}].
 
-log(Lane, Pos, Speed, Length) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=6, v=8}, speed=>Speed}] ++
-        log_middle(Lane, Pos + 1, Speed, Length - 2, []) ++
-        [#{x=>16.0 * (Pos + (Length-1)), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=8, v=8}, speed=>Speed}].
+log(Lane, Pos, Length) ->
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=6, v=8}, speed=>get_lane_speed(Lane)}] ++
+        log_middle(Lane, Pos + 1, get_lane_speed(Lane), Length - 2, []) ++
+        [#{x=>16.0 * (Pos + (Length-1)), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=8, v=8}, speed=>get_lane_speed(Lane)}].
 
 log_middle(_Lane, _Pos, _Speed, Length, Acc) when Length == 0 -> Acc;
 log_middle(Lane, Pos, Speed, Length, Acc) ->
