@@ -65,25 +65,25 @@ init() ->
            player=>#{x=>16.0 * 7, y=>16.0 * 14, w=>16.0, h=>16.0,
                      dir=>up, face=>#face{h=2, v=0}, jump=>0, dying=>0},
            cars=>[
-                  #{x=>0,     y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, dir=>left,  speed=>0.5}, %% Truck front
-                  #{x=>16.0,  y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, dir=>left,  speed=>0.5}, %% Truck back
-                  #{x=>100,   y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, dir=>left,  speed=>0.5}, %% Truck front
-                  #{x=>116.0, y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, dir=>left,  speed=>0.5}, %% Truck back
-                  #{x=>0,     y=>16.0 * 10, w=>16.0, h=>16.0, face=>#face{h=8, v=0}, dir=>right, speed=>3.0}, %% Green/White
-                  #{x=>0,     y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, dir=>left,  speed=>1.0}, %% Purple
-                  #{x=>75,    y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, dir=>left,  speed=>1.0}, %% Purple
-                  #{x=>150,   y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, dir=>left,  speed=>1.0}, %% Purple
-                  #{x=>0,     y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, dir=>right, speed=>1.0}, %% Bulldozer
-                  #{x=>50,    y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, dir=>right, speed=>1.0}, %% Bulldozer
-                  #{x=>150,   y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, dir=>right, speed=>1.0}, %% Bulldozer
-                  #{x=>0,     y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, dir=>left,  speed=>1.0}, %% Yellow
-                  #{x=>128,   y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, dir=>left,  speed=>1.0}  %% Yellow
+                  #{x=>0,     y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, speed=>-0.5}, %% Truck front
+                  #{x=>16.0,  y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, speed=>-0.5}, %% Truck back
+                  #{x=>100,   y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, speed=>-0.5}, %% Truck front
+                  #{x=>116.0, y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, speed=>-0.5}, %% Truck back
+                  #{x=>0,     y=>16.0 * 10, w=>16.0, h=>16.0, face=>#face{h=8, v=0}, speed=>3.0}, %% Green/White
+                  #{x=>0,     y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
+                  #{x=>75,    y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
+                  #{x=>150,   y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
+                  #{x=>0,     y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0}, %% Bulldozer
+                  #{x=>50,    y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0}, %% Bulldozer
+                  #{x=>150,   y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0}, %% Bulldozer
+                  #{x=>0,     y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, speed=>-1.0}, %% Yellow
+                  #{x=>128,   y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, speed=>-1.0}  %% Yellow
                  ],
-           river=>log(3, 0, 0.5, 4) ++ log(3, 6, 0.5, 4) ++ log(3, 11, 0.5, 4) ++
-               turtle_group(2, 4, 0, 0.5) ++ turtle_group(2, 4, 4, 0.5) ++ turtle_group(2, 4, 8, 0.5) ++ turtle_group(2, 4, 12, 0.5) ++
-               log(5, 0, 2.0, 6) ++
-               log(6, 0, 1.0, 3) ++ log(6, 4, 1.0, 3) ++ log(6, 8, 1.0, 3) ++ log(6, 12, 1.0, 3) ++
-               turtle_group(3, 7, 0, 1.0) ++ turtle_group(3, 7, 4, 1.0) ++ turtle_group(3, 7, 8, 1.0) ++ turtle_group(3, 7, 12, 1.0)
+           river=>log(3, 0, get_lane_speed(3), 4) ++ log(3, 6, get_lane_speed(3), 4) ++ log(3, 11, get_lane_speed(3), 4) ++
+               turtle_group(4, 0, get_lane_speed(4), 2) ++ turtle_group(4, 4, get_lane_speed(4), 2) ++ turtle_group(4, 8, get_lane_speed(4), 2) ++ turtle_group(4, 12, get_lane_speed(4), 2) ++
+               log(5, 0, get_lane_speed(5), 6) ++
+               log(6, 0, get_lane_speed(6), 3) ++ log(6, 4, get_lane_speed(6), 3) ++ log(6, 8, get_lane_speed(6), 3) ++ log(6, 12, get_lane_speed(6), 3) ++
+               turtle_group(7, 0, get_lane_speed(7), 3) ++ turtle_group(7, 4, get_lane_speed(7), 3) ++ turtle_group(7, 8, get_lane_speed(7), 3) ++ turtle_group(7, 12, get_lane_speed(7), 3)
           }).
 
 loop(State) ->
@@ -131,22 +131,32 @@ move_player(State, _Scancode) ->  %% No movement change during jump or dying
     State.
 
 
-turtle_group(3, Lane, Pos, Speed) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, dir=>left, speed=>Speed},
-     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, dir=>left, speed=>Speed},
-     #{x=>16.0 * (Pos + 2), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, dir=>left, speed=>Speed}];
-turtle_group(2, Lane, Pos, Speed) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, dir=>left, speed=>Speed},
-     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, dir=>left, speed=>Speed}].
+turtle_group(Lane, Pos, Speed, 3) ->
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed},
+     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed},
+     #{x=>16.0 * (Pos + 2), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed}];
+turtle_group(Lane, Pos, Speed, 2) ->
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed},
+     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>Speed}].
 
 log(Lane, Pos, Speed, Length) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=6, v=8}, dir=>right, speed=>Speed}] ++
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=6, v=8}, speed=>Speed}] ++
         log_middle(Lane, Pos + 1, Speed, Length - 2, []) ++
-        [#{x=>16.0 * (Pos + (Length-1)), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=8, v=8}, dir=>right, speed=>Speed}].
+        [#{x=>16.0 * (Pos + (Length-1)), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=8, v=8}, speed=>Speed}].
 
 log_middle(_Lane, _Pos, _Speed, Length, Acc) when Length == 0 -> Acc;
 log_middle(Lane, Pos, Speed, Length, Acc) ->
-    log_middle(Lane, Pos + 1, Speed, Length - 1, Acc++[#{x=>16.0 * Pos, y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=7, v=8}, dir=>right, speed=>Speed}]).
+    log_middle(Lane, Pos + 1, Speed, Length - 1, Acc++[#{x=>16.0 * Pos, y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=7, v=8}, speed=>Speed}]).
+
+get_lane_speed(Lane) ->
+    case Lane of
+        2 -> 0.0;
+        3 -> 0.5;
+        4 -> -0.5;
+        5 -> 2.0;
+        6 -> 1.0;
+        7 -> -1.0
+end.
 
 get_player_face(Jump) ->
     case Jump of
@@ -170,6 +180,10 @@ get_player_splatface(Id) ->
         4 -> #face{h=0, v=3}
     end.
 
+update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < 128.0 -> %% Not moving
+    io:format("River! y:~B ~n", [trunc(Y)]),
+    io:format("River! speed:~f~n", [get_lane_speed(trunc(Y/16))]),
+    State;
 update_player(State=#{player:=#{jump:=0, dying:=0}}) -> %% Not moving
     State;
 update_player(State=#{player:=#{jump:=9, dying:=0}}) -> %% Finished jump
@@ -206,17 +220,12 @@ update_sprites(State) ->
            river := [move_sprite(C) || C <- maps:get(river, State)]
           }.
 
-move_sprite(Sprite=#{dir:=left}) ->
-    X = maps:get(x, Sprite) - maps:get(speed, Sprite),
-    if
-        X < -15 -> Sprite#{x=>?WIDTH + 16.0};
-        true -> Sprite#{x=>X}
-    end;
 move_sprite(Sprite) ->
     X = maps:get(x, Sprite) + maps:get(speed, Sprite),
     if
-        X > ?WIDTH + 15 -> Sprite#{x=>-16.0};
-        true -> Sprite#{x=>X}
+        X < -15         -> Sprite#{x=>?WIDTH + 15.0};
+        X > ?WIDTH + 15 -> Sprite#{x=>-15.0};
+        true            -> Sprite#{x=>X}
     end.
 
 
