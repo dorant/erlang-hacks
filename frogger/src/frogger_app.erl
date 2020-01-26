@@ -24,6 +24,9 @@
 -define(HEIGHT, 256).
 
 -define(RIVER_BORDER, 128.0).
+-define(PLAYER_INIT_STATE, #{x=>16.0 * 7, y=>16.0 * 14, w=>16.0, h=>16.0,
+                             dir=>up, face=>#face{h=2, v=0},
+                             jump=>0, dying=>0, score=>0}).
 
 %% face defines which 16*16 pixel area to use for the sprite
 -record(face,{h,v}).
@@ -63,10 +66,8 @@ init() ->
                                                         filename:join([PrivDir, "sprites.png"])),
     loop(#{window=>Window, renderer=>Renderer,
            textures=>#{background=>TextureBack, sprites=>TextureSprites},
-           score=>0,
            highscore=>0,
-           player=>#{x=>16.0 * 7, y=>16.0 * 14, w=>16.0, h=>16.0,
-                     dir=>up, face=>#face{h=2, v=0}, jump=>0, dying=>0},
+           player=>?PLAYER_INIT_STATE,
            cars=>[
                   #{x=>0,     y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, speed=>-0.5}, %% Truck front
                   #{x=>16.0,  y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, speed=>-0.5}, %% Truck back
@@ -181,7 +182,9 @@ get_player_splatface(Id) ->
         1 -> #face{h=0, v=4};
         2 -> #face{h=1, v=4};
         3 -> #face{h=2, v=4};
-        4 -> #face{h=0, v=3}
+        4 -> #face{h=0, v=3};
+        5 -> #face{h=0, v=3};
+        6 -> #face{h=0, v=3}
     end.
 
 update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < ?RIVER_BORDER -> %% River, moved by log or turtle
@@ -192,8 +195,8 @@ update_player(State=#{player:=#{jump:=0, dying:=0}}) -> %% Not moving
     State;
 update_player(State=#{player:=#{jump:=9, dying:=0}}) -> %% Finished jump
     Player=maps:get(player, State),
-    Score=maps:get(score, State) + 10,
-    State#{score:=Score, player := Player#{face=>get_player_face(0), jump=>0}};
+    Score=maps:get(score, Player) + 10,
+    State#{player := Player#{face=>get_player_face(0), jump=>0, score:=Score}};
 update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping and not dying
     NewFace = get_player_face(Jump),
     NewJump = Jump + 1,
@@ -208,17 +211,19 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping and
                              y => Y,
                              face => NewFace,
                              jump => NewJump}};
+update_player(State=#{player:=Player=#{dying:=6*6}}) -> %% Done dying, reset
+    Score=max(maps:get(score, Player), maps:get(highscore, State)),
+    State#{player := ?PLAYER_INIT_STATE,
+           highscore=>Score};
 update_player(State=#{player:=Player=#{dying:=Dying}}) -> %% Dying, dont move
-    Score=max(maps:get(score, State), maps:get(highscore, State)),
     Scale=6,
     NewFace=get_player_splatface(Dying div Scale),
-    if Dying == 4 * Scale -> NewDying=4 * Scale;
+    if Dying == 6 * Scale -> NewDying=6 * Scale;
        true               -> NewDying=Dying + 1
     end,
     State#{player := Player#{face=>NewFace,
                              dying=>NewDying,
-                             dir=>up},
-          highscore=>Score}.
+                             dir=>up}}.
 
 
 update_sprites(State) ->
@@ -248,8 +253,7 @@ check_collision(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < ?RIVER_BOR
     River=maps:get(river, State),
     case check_collision(Player, River) of
         false -> Dying=1;
-        true -> Dying=0,
-                io:format("Touching: x=~f, y=~f~n", [maps:get(x, Player), maps:get(y, Player)])
+        true -> Dying=0
     end,
     State#{player:=Player#{dying=>Dying}};
 check_collision(State) -> %% No collision check when dying or jumping(river)
@@ -272,7 +276,7 @@ render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Car
     ok = sdl_renderer:copy(Renderer, maps:get(background, Textures),
                            undefined, scale_rect(#{x=>0, y=>0, w=>?WIDTH, h=>?HEIGHT})),
 
-    ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State), 0),
+    ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, Player), 0),
     ok = render_score(Renderer, maps:get(background, Textures), maps:get(highscore, State), 10),
     ok = render_sprites(Renderer, maps:get(sprites, Textures), lists:append(Cars, River)),
     ok = render_player(Renderer, maps:get(sprites, Textures), Player),
