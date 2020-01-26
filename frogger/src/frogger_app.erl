@@ -64,6 +64,7 @@ init() ->
     loop(#{window=>Window, renderer=>Renderer,
            textures=>#{background=>TextureBack, sprites=>TextureSprites},
            score=>0,
+           highscore=>0,
            player=>#{x=>16.0 * 7, y=>16.0 * 14, w=>16.0, h=>16.0,
                      dir=>up, face=>#face{h=2, v=0}, jump=>0, dying=>0},
            cars=>[
@@ -208,6 +209,7 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping and
                              face => NewFace,
                              jump => NewJump}};
 update_player(State=#{player:=Player=#{dying:=Dying}}) -> %% Dying, dont move
+    Score=max(maps:get(score, State), maps:get(highscore, State)),
     Scale=6,
     NewFace=get_player_splatface(Dying div Scale),
     if Dying == 4 * Scale -> NewDying=4 * Scale;
@@ -215,7 +217,8 @@ update_player(State=#{player:=Player=#{dying:=Dying}}) -> %% Dying, dont move
     end,
     State#{player := Player#{face=>NewFace,
                              dying=>NewDying,
-                             dir=>up}}.
+                             dir=>up},
+          highscore=>Score}.
 
 
 update_sprites(State) ->
@@ -245,7 +248,8 @@ check_collision(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < ?RIVER_BOR
     River=maps:get(river, State),
     case check_collision(Player, River) of
         false -> Dying=1;
-        true -> Dying=0
+        true -> Dying=0,
+                io:format("Touching: x=~f, y=~f~n", [maps:get(x, Player), maps:get(y, Player)])
     end,
     State#{player:=Player#{dying=>Dying}};
 check_collision(State) -> %% No collision check when dying or jumping(river)
@@ -268,7 +272,8 @@ render(State=#{renderer:=Renderer, textures:=Textures, player:=Player, cars:=Car
     ok = sdl_renderer:copy(Renderer, maps:get(background, Textures),
                            undefined, scale_rect(#{x=>0, y=>0, w=>?WIDTH, h=>?HEIGHT})),
 
-    ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State)),
+    ok = render_score(Renderer, maps:get(background, Textures), maps:get(score, State), 0),
+    ok = render_score(Renderer, maps:get(background, Textures), maps:get(highscore, State), 10),
     ok = render_sprites(Renderer, maps:get(sprites, Textures), lists:append(Cars, River)),
     ok = render_player(Renderer, maps:get(sprites, Textures), Player),
 
@@ -285,17 +290,17 @@ get_angle(left) -> float(270);
 get_angle(down) -> float(180);
 get_angle(up) -> float(0).
 
-render_score(Renderer, Texture, Score) ->
-    ok = render_score_digit(Renderer, Texture, 0, empty),
-    ok = render_score_digit(Renderer, Texture, 1, empty),
-    ok = render_score_digit(Renderer, Texture, 2, empty),
-    ok = render_score_digit(Renderer, Texture, 3, (Score div 10000) rem 10),
-    ok = render_score_digit(Renderer, Texture, 4, (Score div 1000) rem 10),
-    ok = render_score_digit(Renderer, Texture, 5, (Score div 100) rem 10),
-    ok = render_score_digit(Renderer, Texture, 6, (Score div 10) rem 10),
-    ok = render_score_digit(Renderer, Texture, 7, Score rem 10),
-    ok = render_score_digit(Renderer, Texture, 8, empty),
-    ok = render_score_digit(Renderer, Texture, 9, empty),
+render_score(Renderer, Texture, Score, Position) ->
+    ok = render_score_digit(Renderer, Texture, Position + 0, empty),
+    ok = render_score_digit(Renderer, Texture, Position + 1, empty),
+    ok = render_score_digit(Renderer, Texture, Position + 2, empty),
+    ok = render_score_digit(Renderer, Texture, Position + 3, (Score div 10000) rem 10),
+    ok = render_score_digit(Renderer, Texture, Position + 4, (Score div 1000) rem 10),
+    ok = render_score_digit(Renderer, Texture, Position + 5, (Score div 100) rem 10),
+    ok = render_score_digit(Renderer, Texture, Position + 6, (Score div 10) rem 10),
+    ok = render_score_digit(Renderer, Texture, Position + 7, Score rem 10),
+    ok = render_score_digit(Renderer, Texture, Position + 8, empty),
+    ok = render_score_digit(Renderer, Texture, Position + 9, empty),
     ok.
 
 render_score_digit(Renderer, Texture, Position, Digit) when is_integer(Digit) ->
