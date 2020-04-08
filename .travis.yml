@@ -1,0 +1,11 @@
+language: erlang
+
+otp_release:
+  - 22.2
+
+before_install:
+  - git clone https://github.com/inaka/elvis.git && cd elvis && rebar3 escriptize && sudo cp _build/default/bin/elvis /usr/bin && cd ..
+
+script:
+  # check style
+  - cd frogger && elvis rock
