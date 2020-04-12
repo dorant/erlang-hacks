@@ -7,9 +7,14 @@ An OTP application
 # Install deps
 sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
 
+# Make sure old build are cleaned out
+rm -rf _build
+rebar3 clean
+
+# Build
 rebar3 compile
 
-# or since rebar3_run plugin
+# Run using the rebar3_run plugin
 rebar3 run
 ```
 

@@ -24,12 +24,13 @@
 -define(HEIGHT, 256).
 
 -define(RIVER_BORDER, 128.0).
--define(PLAYER_INIT_STATE, #{x=>16.0 * 7, y=>16.0 * 14, w=>16.0, h=>16.0,
+-define(FRAME, w=>16.0, h=>16.0).
+-define(PLAYER_INIT_STATE, #{x=>16.0 * 7, y=>16.0 * 14, ?FRAME,
                              dir=>up, face=>#face{h=2, v=0},
                              jump=>0, dying=>0, score=>0}).
 
 %% face defines which 16*16 pixel area to use for the sprite
--record(face,{h,v}).
+-record(face, {h, v}).
 
 
 start(_StartType, _StartArgs) ->
@@ -47,47 +48,47 @@ init() ->
     {ok, Window} = sdl_window:create(<<"Frogger">>, 0, 0, ?WIDTH * ?SCALE, ?HEIGHT * ?SCALE, []),
     {ok, Renderer} = sdl_renderer:create(Window, -1, [accelerated, present_vsync]),
     ok = sdl_renderer:set_draw_color(Renderer, 100, 100, 100, 0),
-    logger:info(#{ msg => "get priv" }),
     case code:priv_dir(frogger) of
         {error, bad_name} ->
-            % This occurs when not running as a release; e.g., erl -pa ebin
-            % Of course, this will not work for all cases, but should account
-            % for most
+            %% When not running as a release; e.g., erl -pa ebin
             PrivDir = "priv";
         PrivDir ->
-            % In this case, we are running in a release and the VM knows
-            % where the application (and thus the priv directory) resides
-            % on the file system
+            %% running in a release
+            %% VM knows where the application resides
             ok
     end,
+    logger:info("Asset directory: ~s", [PrivDir]),
     {ok, TextureBack} = sdl_texture:create_from_file(Renderer,
                                                      filename:join([PrivDir, "background.png"])),
     {ok, TextureSprites} = sdl_texture:create_from_file(Renderer,
                                                         filename:join([PrivDir, "sprites.png"])),
-    loop(#{window=>Window, renderer=>Renderer,
+    loop(#{window=>Window,
+           renderer=>Renderer,
            textures=>#{background=>TextureBack, sprites=>TextureSprites},
            highscore=>0,
            player=>?PLAYER_INIT_STATE,
            cars=>[
-                  #{x=>0,     y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, speed=>-0.5}, %% Truck front
-                  #{x=>16.0,  y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, speed=>-0.5}, %% Truck back
-                  #{x=>100,   y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=5, v=0}, speed=>-0.5}, %% Truck front
-                  #{x=>116.0, y=>16.0 * 9,  w=>16.0, h=>16.0, face=>#face{h=6, v=0}, speed=>-0.5}, %% Truck back
-                  #{x=>0,     y=>16.0 * 10, w=>16.0, h=>16.0, face=>#face{h=8, v=0}, speed=>3.0},  %% Green/White
-                  #{x=>0,     y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
-                  #{x=>75,    y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
-                  #{x=>150,   y=>16.0 * 11, w=>16.0, h=>16.0, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
-                  #{x=>0,     y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
-                  #{x=>50,    y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
-                  #{x=>150,   y=>16.0 * 12, w=>16.0, h=>16.0, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
-                  #{x=>0,     y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, speed=>-1.0}, %% Yellow
-                  #{x=>128,   y=>16.0 * 13, w=>16.0, h=>16.0, face=>#face{h=3, v=0}, speed=>-1.0}  %% Yellow
+                  #{?FRAME, x=>0,    y=>16.0 * 9, face=>#face{h=5, v=0}, speed=>-0.5}, %% TruckFront
+                  #{?FRAME, x=>16.0, y=>16.0 * 9, face=>#face{h=6, v=0}, speed=>-0.5}, %% TruckBack
+                  #{?FRAME, x=>100,  y=>16.0 * 9, face=>#face{h=5, v=0}, speed=>-0.5}, %% TruckFront
+                  #{?FRAME, x=>116.0, y=>16.0 * 9, face=>#face{h=6, v=0}, speed=>-0.5}, %% TruckBack
+                  #{?FRAME, x=>0,    y=>16.0 * 10, face=>#face{h=8, v=0}, speed=>3.0}, %% GreenWhite
+                  #{?FRAME, x=>0,    y=>16.0 * 11, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
+                  #{?FRAME, x=>75,   y=>16.0 * 11, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
+                  #{?FRAME, x=>150,  y=>16.0 * 11, face=>#face{h=7, v=0}, speed=>-1.0}, %% Purple
+                  #{?FRAME, x=>0,    y=>16.0 * 12, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
+                  #{?FRAME, x=>50,   y=>16.0 * 12, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
+                  #{?FRAME, x=>150,  y=>16.0 * 12, face=>#face{h=4, v=0}, speed=>1.0},  %% Bulldozer
+                  #{?FRAME, x=>0,    y=>16.0 * 13, face=>#face{h=3, v=0}, speed=>-1.0}, %% Yellow
+                  #{?FRAME, x=>128,  y=>16.0 * 13, face=>#face{h=3, v=0}, speed=>-1.0}  %% Yellow
                  ],
            river=>log(3, 0, 4) ++ log(3, 6, 4) ++ log(3, 11, 4) ++
-               turtle_group(4, 0, 2) ++ turtle_group(4, 4, 2) ++ turtle_group(4, 8, 2) ++ turtle_group(4, 12, 2) ++
+               (turtle_group(4, 0, 2) ++ turtle_group(4, 4, 2) ++
+                    turtle_group(4, 8, 2) ++ turtle_group(4, 12, 2)) ++
                log(5, 0, 6) ++
                log(6, 0, 3) ++ log(6, 4, 3) ++ log(6, 8, 3) ++ log(6, 12, 3) ++
-               turtle_group(7, 0, 3) ++ turtle_group(7, 4, 3) ++ turtle_group(7, 8, 3) ++ turtle_group(7, 12, 3)
+               (turtle_group(7, 0, 3) ++ turtle_group(7, 4, 3) ++
+                    turtle_group(7, 8, 3) ++ turtle_group(7, 12, 3))
           }).
 
 loop(State) ->
@@ -129,29 +130,36 @@ move_player(State=#{player:=#{jump:=0, dying:=0}}, Scancode) ->
         ?KEYCODE_UP ->
             State#{player := Player#{dir => up,
                                      jump => 1}};
-        _ -> io:format("Unhandled scancode: ~B~n", [Scancode]),
-              State
+        _ -> logger:warning("Unhandled scancode: ~B~n", [Scancode]),
+             State
     end;
 move_player(State, _Scancode) ->  %% No movement change during jump or dying
     State.
 
 
 turtle_group(Lane, Pos, 3) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)},
-     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)},
-     #{x=>16.0 * (Pos + 2), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)}];
+    Speed = get_lane_speed(Lane),
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, ?FRAME, face=>#face{h=0, v=5}, speed=>Speed},
+     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, ?FRAME, face=>#face{h=0, v=5}, speed=>Speed},
+     #{x=>16.0 * (Pos + 2), y=>16.0 * Lane, ?FRAME, face=>#face{h=0, v=5}, speed=>Speed}];
 turtle_group(Lane, Pos, 2) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)},
-     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=0, v=5}, speed=>get_lane_speed(Lane)}].
+    Speed = get_lane_speed(Lane),
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, ?FRAME, face=>#face{h=0, v=5}, speed=>Speed},
+     #{x=>16.0 * (Pos + 1), y=>16.0 * Lane, ?FRAME, face=>#face{h=0, v=5}, speed=>Speed}].
 
 log(Lane, Pos, Length) ->
-    [#{x=>16.0 * Pos,       y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=6, v=8}, speed=>get_lane_speed(Lane)}] ++
-        log_middle(Lane, Pos + 1, get_lane_speed(Lane), Length - 2, []) ++
-        [#{x=>16.0 * (Pos + (Length-1)), y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=8, v=8}, speed=>get_lane_speed(Lane)}].
+    Speed = get_lane_speed(Lane),
+    [#{x=>16.0 * Pos,       y=>16.0 * Lane, ?FRAME, face=>#face{h=6, v=8}, speed=>Speed}]
+        ++ log_middle(Lane, Pos + 1, Speed, Length - 2, [])
+        ++ [#{x=>16.0 * (Pos + (Length-1)), y=>16.0 * Lane, ?FRAME,
+              face=>#face{h=8, v=8}, speed=>Speed}].
 
 log_middle(_Lane, _Pos, _Speed, Length, Acc) when Length == 0 -> Acc;
 log_middle(Lane, Pos, Speed, Length, Acc) ->
-    log_middle(Lane, Pos + 1, Speed, Length - 1, Acc++[#{x=>16.0 * Pos, y=>16.0 * Lane, w=>16.0, h=>16.0, face=>#face{h=7, v=8}, speed=>Speed}]).
+    log_middle(Lane, Pos + 1, Speed, Length - 1,
+               Acc ++ [#{x=>16.0 * Pos, y=>16.0 * Lane, ?FRAME,
+                         face=>#face{h=7, v=8}, speed=>Speed}]
+              ).
 
 get_lane_speed(Lane) ->
     case Lane of
@@ -161,7 +169,7 @@ get_lane_speed(Lane) ->
         5 -> 2.0;
         6 -> 1.0;
         7 -> -1.0
-end.
+    end.
 
 get_player_face(Jump) ->
     case Jump of
@@ -187,7 +195,8 @@ get_player_splatface(Id) ->
         6 -> #face{h=0, v=3}
     end.
 
-update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < ?RIVER_BORDER -> %% River, moved by log or turtle
+update_player(State=#{player:=#{jump:=0, dying:=0, y:=Y}}) when Y < ?RIVER_BORDER ->
+    %% In river; moved by log or turtle in lane speed
     Player=maps:get(player, State),
     X = maps:get(x, Player) + get_lane_speed(trunc(Y/16)),
     State#{player := Player#{x => X}};
@@ -206,7 +215,7 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping and
         down  -> X = maps:get(x, Player),     Y = maps:get(y, Player) + 2;
         up    -> X = maps:get(x, Player),     Y = maps:get(y, Player) - 2
     end,
-%%    io:format("Player: x:~B,y:~B~n", [trunc(X), trunc(Y)]),
+    %%    logger:debug("Player: x:~B,y:~B~n", [trunc(X), trunc(Y)]),
     State#{player := Player#{x => X,
                              y => Y,
                              face => NewFace,
@@ -319,16 +328,18 @@ render_score_digit(Renderer, Texture, Position, _) ->
 
 render_player(Renderer, Texture, Player) ->
     Face = maps:get(face, Player),
-%%    io:format("Player: x=~f, y=~f~n", [maps:get(x, Player), maps:get(y, Player)]),
+    %%    logger:debug("Player: x=~f, y=~f~n", [maps:get(x, Player), maps:get(y, Player)]),
     sdl_renderer:copy(Renderer, Texture,
-                      to_rect(#{x=>Face#face.h * 16, y=>Face#face.v * 16,
-                                w=>16, h=>16}),
+                      to_rect(#{?FRAME,
+                                x=>Face#face.h * 16,
+                                y=>Face#face.v * 16}),
                       scale_rect(to_rect(Player)),
                       get_angle(maps:get(dir, Player)), undefined, [none]).
 
 render_sprites(Renderer, Texture, Sprites) ->
     [ok = sdl_renderer:copy(Renderer, Texture,
-                            to_rect(#{x=>(maps:get(face, S))#face.h * 16, y=>(maps:get(face, S))#face.v * 16,
-                                      w=>16, h=>16}),
+                            to_rect(#{?FRAME,
+                                      x=>(maps:get(face, S))#face.h * 16,
+                                      y=>(maps:get(face, S))#face.v * 16}),
                             scale_rect(to_rect(S))) || S <- Sprites],
     ok.
