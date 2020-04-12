@@ -24,6 +24,7 @@
 -define(HEIGHT, 256).
 
 -define(RIVER_BORDER, 128.0).
+-define(BOTTOM_BORDER, 16.0 * 14).
 -define(FRAME, w=>16.0, h=>16.0).
 -define(PLAYER_INIT_STATE, #{x=>16.0 * 7, y=>16.0 * 14, ?FRAME,
                              dir=>up, face=>#face{h=2, v=0},
@@ -220,7 +221,7 @@ update_player(State=#{player:=Player=#{jump:=Jump, dying:=0}}) -> %% Jumping and
                              y => Y,
                              face => NewFace,
                              jump => NewJump}};
-update_player(State=#{player:=Player=#{dying:=6*6}}) -> %% Done dying, reset
+update_player(State=#{player:=Player=#{dying:=6*6}}) -> %% Done dying animation, reset
     Score=max(maps:get(score, Player), maps:get(highscore, State)),
     State#{player := ?PLAYER_INIT_STATE,
            highscore=>Score};
@@ -274,6 +275,8 @@ check_collision(Player, ObjectList) ->
 check_borders(State=#{player:=Player=#{dying:=0, x:=X}}) when X > ?WIDTH-15.0 ->
     State#{player:=Player#{dying=>1}};
 check_borders(State=#{player:=Player=#{dying:=0, x:=X}}) when X < 0 ->
+    State#{player:=Player#{dying=>1}};
+check_borders(State=#{player:=Player=#{dying:=0, y:=Y}}) when Y > ?BOTTOM_BORDER ->
     State#{player:=Player#{dying=>1}};
 check_borders(State) ->
     State.
