@@ -22,18 +22,22 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Dialyzer
+      run: rebar3 dialyzer
+      with:
+        path: echo_server
     - name: Get elvis
       uses: actions/checkout@v2
       with:
         repository: inaka/elvis
         path: elvis
     - name: Build elvis
-      run: cd elvis && rebar3 escriptize
+      run: rebar3 escriptize
+      with:
+        path: elvis
     - name: Run elvis
       run: |
         elvis/_build/default/bin/elvis rock
-    - name: Dialyzer
-      run: cd elvis && rebar3 dialyzer
     # - name: Compile
     #   run: rebar3 compile
     # - name: Run tests
