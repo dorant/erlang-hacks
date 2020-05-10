@@ -4,6 +4,7 @@
 * frogger - A frogger game in Erlang
 * redis-usage - Test of eredis
 * hex - binary to/from hex converter functions
+* [echo server](echo_server/README.md) - Collection of different echo server designs
 
 ## Setup
 
@@ -12,9 +13,12 @@
 ``` bash
 # See https://github.com/kerl/kerl
 brew install kerl
-kerl build 22.2
-kerl install 22.2 ~/erlang/22.2
-. ~/erlang/22.2/activate
+# Build with wxWidgets by first installing
+sudo apt-cache search 'libwxgt*'
+sudo apt-get -y install libwxgtk3.0-gtk3-dev
+kerl build 22.1
+kerl install 22.1 ~/erlang/22.1
+. ~/erlang/22.1/activate
 
 # Install rebar3
 curl -L https://github.com/erlang/rebar3/releases/download/3.13.0/rebar3 -o ~/bin/rebar3 && chmod +x ~/bin/rebar3
@@ -23,23 +27,43 @@ curl -L https://github.com/erlang/rebar3/releases/download/3.13.0/rebar3 -o ~/bi
 cd /tmp; git clone https://github.com/inaka/elvis.git; cd elvis; rebar3 escriptize; cp _build/default/bin/elvis ~/erlang/22.2/bin/erl
 ```
 
-### Create new project
-
-``` bash
-rebar3 new app <name>
-```
-
 ### Run
 
 ``` shell
-# Style reviewer
-elvis rock
-
 # Run
 rebar3 shell
 ```
 
-### Other
+### Create new project
+
+``` bash
+rebar3 new app <name>
+rebar3 new lib <name>
+
+# Style reviewer
+elvis rock
+```
+
+### Build dependencies
+
+Show dependencies
+
+``` shell
+# Show first-level of dependencies
+rebar3 deps
+
+# Show all dependencies
+rebar3 tree
+```
+
+Override library
+
+``` shell
+# Clone a dependency into a folder
+_checkouts/<repo>
+```
+
+### Erlang tips'n'tricks
 
 ``` shell
 # Get Erlang version
@@ -62,6 +86,9 @@ m(modulename).
 
 # Debug print Erlang terms, linebreak at 80chars
 io:format("DEBUG: ~p~n", [Data]),
+
+# Start a graphical tool for observing characteristics of Erlang systems
+observer:start().
 ```
 
 Rebar, use something like
@@ -69,13 +96,11 @@ Rebar, use something like
 {erl_opts, [debug_info, warn_missing_spec, warnings_as_errors]}.
 ```
 
-Override library
-``` shell
-# Clone a dependency into a folder
-_checkouts/<repo>
-```
+### Code formatting
+See http://tech.nextroll.com/blog/dev/2020/02/25/erlang-rebar3-format.html
 
 ## Links
 
-[Rebar3 howto](https://praglowski.com/2016/05/10/your-first-erlang-application-with-rebar3)
-[Analyse using GDB](https://www.erlang-solutions.com/blog/how-to-analyse-a-beam-core-dump.html)
+* [Rebar3 howto](https://praglowski.com/2016/05/10/your-first-erlang-application-with-rebar3)
+* [Analyse using GDB](https://www.erlang-solutions.com/blog/how-to-analyse-a-beam-core-dump.html)
+* [Guidelines](https://github.com/inaka/erlang_guidelines)
