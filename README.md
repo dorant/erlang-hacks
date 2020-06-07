@@ -5,6 +5,7 @@
 * redis-usage - Test of eredis
 * hex - binary to/from hex converter functions
 * [echo server](echo_server/README.md) - Collection of different echo server designs
+* [chat](chat/README.md) - a process registry tryout
 
 ## Setup
 
